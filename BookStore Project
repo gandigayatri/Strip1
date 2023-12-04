@@ -1,0 +1,291 @@
+package com.anp.book1;
+
+import jakarta.persistence.Column;
+
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Entity;
+
+@Entity
+@Table(name="Book1")
+public class Book1 {
+	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY )
+	private int id;
+	
+	private String title;
+	
+	
+	@Column(name= "book_author")
+	private String author;
+	
+	
+	private String stock;
+	
+	private double price;
+	
+	public int getId() {
+		return id;
+	}
+	
+	public Book1(int id, String title, String author, String stock, double price) {
+		
+		super();
+		this.id = id;
+		this.title = title;
+		this.author = author;
+		this.stock = stock;
+		this.price = price;
+		
+	}
+	public int getid() {
+		return id;
+	}
+	
+	
+	public void setId(int id) {
+		this.id = id;
+	}
+	
+	
+	public String getTitle() {
+		return title;
+	}
+	
+	public void setTitle(String title) {
+		this.title = title;
+	}
+	
+	public String getAuthor() {
+		return author;
+	}
+	
+	public void setAuthor(String author) {
+		this.author = author;
+	}
+	
+	public String getStock() {
+		return stock;
+	}
+	
+	public void setStock(String stock) {
+		this.stock = stock;
+	}
+	
+	public double getPrice() {
+		return price;
+	}
+	
+	
+	public void setPrice(double price) {
+		this.price = price;
+	}
+	
+	
+	
+	@Override
+	public String toString() {
+		return "BookStore [id=" + id + ", title=" + title + ", author=" + author + ", stock=" + stock + ", price=" + price
+				+ "]";
+	}
+	
+	public BookStore() {
+		super();
+		// TODO Auto-generated constructor stub
+	}
+
+	}
+
+	----------------------------------------------------------------------------------------------------------
+           // Book2.java//
+		   
+package com.anp.book1;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.EntityManagerFactory;
+import jakarta.persistence.Persistence;
+import java.util.List;
+import java.util.Optional;
+
+public class BookMain {
+
+    public static void main(String[] args) {
+        EntityManagerFactory factory = null;
+
+        try {
+            factory = Persistence.createEntityManagerFactory("km");
+            EntityManager em = factory.createEntityManager();
+
+            System.out.println("___WELCOME TO BOOK 1__");
+
+            BookStore book1 = new Book1(1, "Corejava", "James Gosling", "100", 700.0);
+            BookStore book2 = new Book1(2, "Polity", "Lakhmikanth", "200", 800.0);
+            BookStore book3 = new Book1(3, "Environment", "shankar", "300", 900.0);
+
+            BookStoreDAO bookdao = new Book1DAO(em);
+            bookdao.save(book1);
+            bookdao.save(book2);
+            bookdao.save(book3);
+            System.out.println("Book1 is created successfully ");
+
+            // Make sure to define these variables appropriately
+            int newid = 1;
+            String newtitle = "UpdatedTitle";
+            String newauthor = "UpdatedAuthor";
+            String newstock = "UpdatedStock";
+            double newprice = 1000.0;
+
+            bookdao.updateBookStore(newid, newtitle, newauthor, newstock, newprice);
+            System.out.println("Book1 is updated successfully ");
+
+            System.out.println("--------------");
+
+            System.out.println("Book1 details based on id:");
+            Optional<BookStore> bookById = bookdao.findById(1);
+            System.out.println(bookById);
+
+            System.out.println("------------");
+
+            System.out.println("Details of all the book1");
+            List<BookStore> allBooks = bookdao.findAll();
+            System.out.println(allBooks);
+
+            System.out.println("Removing based on id:");
+            bookdao.remove(2);
+            System.out.println("2nd record is removed");
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("Exception");
+        } finally {
+            if (factory != null) {
+                factory.close();
+            }
+        }
+    }
+}	
+
+-----------------------------------------------------------------------------------------------------------
+	
+      	//Dao.java//
+	
+package com.anp.book1;
+
+import jakarta.persistence.EntityManager;
+import java.util.List;
+import java.util.Optional;
+
+public class BookStoreDAO {
+
+    private final EntityManager entityManager;
+
+    public BookStoreDAO(EntityManager entityManager) {
+        this.entityManager = entityManager;
+    }
+
+    public void save(BookStore bookStore) {
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.persist(bookStore);
+            entityManager.getTransaction().commit();
+        }   
+        catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    public void updateBookStore(int id, String title, String author, String stock, double price) {
+        try {
+            entityManager.getTransaction().begin();
+            BookStore bookStore = entityManager.find(BookStore.class, id);
+            if (bookStore != null) {
+                bookStore.setTitle(title);
+                bookStore.setAuthor(author);
+                bookStore.setStock(stock);
+                bookStore.setPrice(price);
+            }
+            entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    public void remove(int id) {
+        try {
+            entityManager.getTransaction().begin();
+            BookStore bookStore = entityManager.find(BookStore.class, id);
+            if (bookStore != null) {
+                entityManager.remove(bookStore);
+            }
+            entityManager.getTransaction().commit();
+        } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
+            e.printStackTrace();
+        }
+    }
+
+    public Optional<BookStore> findById(int id) {
+        BookStore bookStore = entityManager.find(BookStore.class, id);
+        return Optional.ofNullable(bookStore);
+    }
+
+    public List<BookStore> findAll() {
+        return entityManager.createQuery("from BookStore", BookStore.class).getResultList();
+    }
+
+--------------------------------------------------------------------------------------------------------------------
+         persistence.xml
+
+persistence xmlns="http://xmlns.jcp.org/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.2" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_2.xsd">
+<persistence-unit name="gg">
+<class> 
+com.anp.book1</class>
+<properties>
+<property name="javax.persistence.jdbc.url" value="jdbc:mysql://localhost:3306/BookStoreManagementSystem"/>
+<property name="javax.persistence.jdbc.user" value="root"/>
+<property name="javax.persistence.jdbc.password" value="gayatri@88"/>
+<property name="javax.persistence.jdbc.driver" value="com.mysql.cj.jdbc.Driver"/>
+<property name="hibernate.hbm2ddl.auto" value="update"/>
+<property name="hibernate.show_sql" value="true"/>
+<property name="hibernate.format_sql" value="true"/>
+</properties>
+</persistence-unit>
+</persistence>
+-----------------------------------------------------------------------------------------------------
+                                    pom.xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>com.anp.bookstore</groupId>
+  <artifactId>BookStoreManagementSystem</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <dependencies>
+	  <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+<dependency>
+    <groupId>mysql</groupId>
+    <artifactId>mysql-connector-java</artifactId>
+    <version>8.0.23</version>
+</dependency>
+
+
+	<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
+<!-- https://mvnrepository.com/artifact/org.hibernate.orm/hibernate-core -->
+<dependency>
+    <groupId>org.hibernate.orm</groupId>
+    <artifactId>hibernate-core</artifactId>
+    <version>6.3.2.Final</version>
+</dependency>
+
+</dependencies>
+  
+  
+</project>
